@@ -96,7 +96,7 @@ type HostContext = {
 
 let currentUpdatePriority = NoEventPriority;
 
-export default createReconciler<
+const reconciler = createReconciler<
 	ElementNames,
 	Props,
 	DOMElement,
@@ -330,3 +330,7 @@ export default createReconciler<
 		return null;
 	},
 });
+
+export const batchedUpdates = reconciler.batchedUpdates;
+
+export default reconciler;
