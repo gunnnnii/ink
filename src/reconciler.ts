@@ -95,7 +95,7 @@ type UpdatePayload = {
 	style: Styles | undefined;
 };
 
-export default createReconciler<
+const reconciler = createReconciler<
 	ElementNames,
 	Props,
 	DOMElement,
@@ -299,3 +299,7 @@ export default createReconciler<
 		cleanupYogaNode(removeNode.yogaNode);
 	},
 });
+
+export const batchedUpdates = reconciler.batchedUpdates;
+
+export default reconciler;
