@@ -26,3 +26,4 @@ export {default as useFocus} from './hooks/use-focus.js';
 export {default as useFocusManager} from './hooks/use-focus-manager.js';
 export {default as measureElement} from './measure-element.js';
 export type {DOMElement} from './dom.js';
+export {type ForegroundColorName} from 'ansi-styles'; // Note: We import directly from `ansi-styles` to avoid a bug in TypeScript.
