@@ -295,7 +295,21 @@ export default class Output {
 
 				if (toTransform) {
 					// Apply the transformation
-					const transformed = transform(toTransform);
+					let transformed = transform(toTransform);
+
+					// Ensure transformed content maintains the same visual width
+					const originalWidth = stringWidth(toTransform);
+					const transformedWidth = stringWidth(transformed);
+
+					if (transformedWidth > originalWidth) {
+						// Truncate if too long
+						transformed = sliceAnsi(transformed, 0, originalWidth);
+					} else if (transformedWidth < originalWidth) {
+						// Pad with spaces if too short
+						transformed =
+							transformed + ' '.repeat(originalWidth - transformedWidth);
+					}
+
 					transformedLines[y] = before + transformed + after;
 				}
 			}

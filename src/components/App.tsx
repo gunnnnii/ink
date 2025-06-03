@@ -8,6 +8,7 @@ import StdoutContext from './StdoutContext.js';
 import StderrContext from './StderrContext.js';
 import FocusContext from './FocusContext.js';
 import ErrorOverview from './ErrorOverview.js';
+import { PixelTransformProvider } from './PixelTransform.js';
 
 const tab = '\t';
 const shiftTab = '\u001B[Z';
@@ -113,11 +114,13 @@ export default class App extends PureComponent<Props, State> {
 									focus: this.focus,
 								}}
 							>
-								{this.state.error ? (
-									<ErrorOverview error={this.state.error as Error} />
-								) : (
-									this.props.children
-								)}
+								<PixelTransformProvider>
+									{this.state.error ? (
+										<ErrorOverview error={this.state.error as Error} />
+									) : (
+										this.props.children
+									)}
+								</PixelTransformProvider>
 							</FocusContext.Provider>
 						</StderrContext.Provider>
 					</StdoutContext.Provider>
