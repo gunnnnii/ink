@@ -1,5 +1,6 @@
 import React, { type ReactNode, useEffect, useRef, useContext, useState, useCallback } from 'react';
 import { createContext } from 'react';
+import Text from './Text.js';
 
 /**
  * Context for triggering re-renders when pixel transformations change.
@@ -72,7 +73,8 @@ export function PixelTransformProvider({ children }: { children: ReactNode }) {
  * ```
  */
 export default function PixelTransform({ range, transform, children }: Props) {
-  const forceUpdate = useContext(PixelTransformContext);
+  const [id, forceUpdate] = useState(0);
+  // const forceUpdate = useContext(PixelTransformContext);
   const transformationRef = useRef<{
     range: PixelRange;
     transform: (content: string) => string;
@@ -119,7 +121,7 @@ export default function PixelTransform({ range, transform, children }: Props) {
     pixelTransformations.add(transformation);
 
     // Trigger a re-render of the entire app only when something changed
-    forceUpdate();
+    forceUpdate((id) => id + 1);
 
     // Cleanup function to remove transformation when component unmounts or changes
     return () => {
@@ -127,11 +129,10 @@ export default function PixelTransform({ range, transform, children }: Props) {
         pixelTransformations.delete(transformationRef.current);
         transformationRef.current = null;
         // Trigger update when transformation is removed
-        forceUpdate();
       }
     };
   }, [range, transform, forceUpdate]);
 
   // This component doesn't render anything itself, it just registers transformations
-  return children ? <>{children}</> : null;
+  return children ? <><Text key={id}>{""}</Text>{children}</> : <Text key={id}>{""}</Text>;
 } 
