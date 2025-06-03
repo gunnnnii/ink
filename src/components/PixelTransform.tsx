@@ -1,4 +1,4 @@
-import React, { type ReactNode, useEffect, useRef, useContext, useState, useCallback } from 'react';
+import React, { type ReactNode, useEffect, useRef, useState, useCallback } from 'react';
 import { createContext } from 'react';
 import Text from './Text.js';
 
