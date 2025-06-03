@@ -13,6 +13,11 @@ export type {Props as StaticProps} from './components/Static.js';
 export {default as Static} from './components/Static.js';
 export type {Props as TransformProps} from './components/Transform.js';
 export {default as Transform} from './components/Transform.js';
+export type {
+	Props as PixelTransformProps,
+	PixelRange,
+} from './components/PixelTransform.js';
+export {default as PixelTransform} from './components/PixelTransform.js';
 export type {Props as NewlineProps} from './components/Newline.js';
 export {default as Newline} from './components/Newline.js';
 export {default as Spacer} from './components/Spacer.js';

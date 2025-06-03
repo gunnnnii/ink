@@ -8,6 +8,7 @@ import {
 	tokenize,
 } from '@alcalzone/ansi-tokenize';
 import {type OutputTransformer} from './render-node-to-output.js';
+import {getPixelTransformations} from './components/PixelTransform.js';
 
 /**
  * "Virtual" output class
@@ -227,18 +228,79 @@ export default class Output {
 			}
 		}
 
-		const generatedOutput = output
-			.map(line => {
-				// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
-				const lineWithoutEmptyItems = line.filter(item => item !== undefined);
+		let generatedOutput = output.map(line => {
+			// See https://github.com/vadimdemedes/ink/pull/564#issuecomment-1637022742
+			const lineWithoutEmptyItems = line.filter(item => item !== undefined);
+			return styledCharsToString(lineWithoutEmptyItems).trimEnd();
+		});
 
-				return styledCharsToString(lineWithoutEmptyItems).trimEnd();
-			})
-			.join('\n');
+		// Apply pixel transformations last to ensure they are not overwritten
+		generatedOutput = this.applyPixelTransformations(generatedOutput);
 
 		return {
-			output: generatedOutput,
+			output: generatedOutput.join('\n'),
 			height: output.length,
 		};
+	}
+
+	private applyPixelTransformations(lines: string[]): string[] {
+		const pixelTransformations = getPixelTransformations();
+
+		if (pixelTransformations.size === 0) {
+			return lines;
+		}
+
+		// Create a copy of lines to avoid modifying the original
+		const transformedLines = [...lines];
+
+		// Apply all pixel transformations
+		for (const {range, transform} of pixelTransformations) {
+			const {start, end} = range;
+
+			// Handle multi-line ranges
+			for (let y = start.y; y <= end.y && y < transformedLines.length; y++) {
+				const line = transformedLines[y];
+				if (!line) continue;
+
+				let startX: number;
+				let endX: number;
+
+				if (start.y === end.y) {
+					// Single line transformation
+					startX = start.x;
+					endX = end.x;
+				} else if (y === start.y) {
+					// First line of multi-line transformation
+					startX = start.x;
+					endX = stringWidth(line) - 1;
+				} else if (y === end.y) {
+					// Last line of multi-line transformation
+					startX = 0;
+					endX = end.x;
+				} else {
+					// Middle lines of multi-line transformation
+					startX = 0;
+					endX = stringWidth(line) - 1;
+				}
+
+				// Ensure coordinates are within bounds
+				const lineWidth = stringWidth(line);
+				startX = Math.max(0, Math.min(startX, lineWidth));
+				endX = Math.max(startX, Math.min(endX, lineWidth - 1));
+
+				// Use ANSI-aware slicing to avoid corrupting escape sequences
+				const before = sliceAnsi(line, 0, startX);
+				const toTransform = sliceAnsi(line, startX, endX + 1);
+				const after = sliceAnsi(line, endX + 1);
+
+				if (toTransform) {
+					// Apply the transformation
+					const transformed = transform(toTransform);
+					transformedLines[y] = before + transformed + after;
+				}
+			}
+		}
+
+		return transformedLines;
 	}
 }
