@@ -42,6 +42,28 @@ export const clearPixelTransformations = () => {
   pixelTransformations.clear();
 };
 
+const subscribers = new Set<() => void>();
+export const subscribeToPixelTransformations = (callback: () => void) => {
+  subscribers.add(callback);
+
+  return () => {
+    subscribers.delete(callback);
+  };
+};
+
+let scheduled = false;
+const triggerPixelTransformations = () => {
+  if (scheduled) {
+    return;
+  }
+
+  scheduled = true;
+  setImmediate(() => {
+    subscribers.forEach(callback => callback());
+    scheduled = false;
+  })
+};
+
 export function PixelTransformProvider({ children }: { children: ReactNode }) {
   const [, forceUpdate] = useState(Symbol());
 
@@ -72,8 +94,6 @@ export function PixelTransformProvider({ children }: { children: ReactNode }) {
  * ```
  */
 export default function PixelTransform({ range, transform, children }: Props) {
-  const [id, forceUpdate] = useState(0);
-  // const forceUpdate = useContext(PixelTransformContext);
   const transformationRef = useRef<{
     range: PixelRange;
     transform: (content: string) => string;
@@ -120,20 +140,16 @@ export default function PixelTransform({ range, transform, children }: Props) {
     pixelTransformations.add(transformation);
 
     // Trigger a re-render of the entire app only when something changed
-    forceUpdate((id) => id + 1);
-
+    triggerPixelTransformations();
     // Cleanup function to remove transformation when component unmounts or changes
     return () => {
       if (transformationRef.current) {
-        forceUpdate((id) => id + 1);
         pixelTransformations.delete(transformationRef.current);
         transformationRef.current = null;
-        // Trigger update when transformation is removed
+        triggerPixelTransformations();
       }
     };
-  }, [range, transform, forceUpdate]);
+  }, [range, transform]);
 
-  // This component doesn't render anything itself, it just registers transformations
-  // however, we we use these empty text elements to force a re-render when the transformations change
-  return children ? <><ink-text key={id} />{children}</> : <ink-text key={id} />;
+  return children;
 } 

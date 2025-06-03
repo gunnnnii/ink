@@ -15,6 +15,7 @@ import * as dom from './dom.js';
 import logUpdate, {type LogUpdate} from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
+import { subscribeToPixelTransformations } from './components/PixelTransform.js';
 
 const noop = () => {};
 
@@ -44,6 +45,7 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
+private unsubscribePixelTransformations: () => void;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -98,6 +100,10 @@ export default class Ink {
 
 		// Unmount when process exits
 		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
+
+		this.unsubscribePixelTransformations = subscribeToPixelTransformations(() => {
+			this.onRender();
+		});
 
 		if (process.env['DEV'] === 'true') {
 			reconciler.injectIntoDevTools({
@@ -284,6 +290,8 @@ export default class Ink {
 		if (typeof this.unsubscribeResize === 'function') {
 			this.unsubscribeResize();
 		}
+
+		this.unsubscribePixelTransformations()
 
 		// CIs don't handle erasing ansi escapes well, so it's better to
 		// only render last frame of non-static output
