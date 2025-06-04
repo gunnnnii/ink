@@ -1,6 +1,6 @@
-import {EventEmitter} from 'node:events';
+import { EventEmitter } from 'node:events';
 import process from 'node:process';
-import React, {PureComponent, type ReactNode} from 'react';
+import React, { PureComponent, type ReactNode } from 'react';
 import cliCursor from 'cli-cursor';
 import AppContext from './AppContext.js';
 import StdinContext from './StdinContext.js';
@@ -23,6 +23,7 @@ type Props = {
 	readonly writeToStderr: (data: string) => void;
 	readonly exitOnCtrlC: boolean;
 	readonly onExit: (error?: Error) => void;
+	readonly screenshot: () => string;
 };
 
 type State = {
@@ -44,7 +45,7 @@ export default class App extends PureComponent<Props, State> {
 	static displayName = 'InternalApp';
 
 	static getDerivedStateFromError(error: Error) {
-		return {error};
+		return { error };
 	}
 
 	override state = {
@@ -71,6 +72,7 @@ export default class App extends PureComponent<Props, State> {
 				// eslint-disable-next-line react/jsx-no-constructed-context-values
 				value={{
 					exit: this.handleExit,
+					screenshot: this.props.screenshot,
 				}}
 			>
 				<StdinContext.Provider
@@ -147,7 +149,7 @@ export default class App extends PureComponent<Props, State> {
 	}
 
 	handleSetRawMode = (isEnabled: boolean): void => {
-		const {stdin} = this.props;
+		const { stdin } = this.props;
 
 		if (!this.isRawModeSupported()) {
 			if (stdin === process.stdin) {
@@ -247,7 +249,7 @@ export default class App extends PureComponent<Props, State> {
 				return previousState;
 			}
 
-			return {activeFocusId: id};
+			return { activeFocusId: id };
 		});
 	};
 
@@ -277,7 +279,7 @@ export default class App extends PureComponent<Props, State> {
 		});
 	};
 
-	addFocusable = (id: string, {autoFocus}: {autoFocus: boolean}): void => {
+	addFocusable = (id: string, { autoFocus }: { autoFocus: boolean }): void => {
 		this.setState(previousState => {
 			let nextFocusId = previousState.activeFocusId;
 

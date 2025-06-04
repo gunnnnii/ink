@@ -1,23 +1,23 @@
 import process from 'node:process';
-import React, {type ReactNode} from 'react';
-import {throttle} from 'es-toolkit/compat';
+import React, { type ReactNode } from 'react';
+import { throttle } from 'es-toolkit/compat';
 import ansiEscapes from 'ansi-escapes';
 import isInCi from 'is-in-ci';
 import autoBind from 'auto-bind';
 import signalExit from 'signal-exit';
 import patchConsole from 'patch-console';
-import {LegacyRoot} from 'react-reconciler/constants.js';
-import {type FiberRoot} from 'react-reconciler';
+import { LegacyRoot } from 'react-reconciler/constants.js';
+import { type FiberRoot } from 'react-reconciler';
 import Yoga from 'yoga-layout';
 import reconciler from './reconciler.js';
 import render from './renderer.js';
 import * as dom from './dom.js';
-import logUpdate, {type LogUpdate} from './log-update.js';
+import logUpdate, { type LogUpdate } from './log-update.js';
 import instances from './instances.js';
 import App from './components/App.js';
 import { subscribeToPixelTransformations } from './components/PixelTransform.js';
 
-const noop = () => {};
+const noop = () => { };
 
 export type Options = {
 	stdout: NodeJS.WriteStream;
@@ -45,7 +45,8 @@ export default class Ink {
 	private exitPromise?: Promise<void>;
 	private restoreConsole?: () => void;
 	private readonly unsubscribeResize?: () => void;
-private unsubscribePixelTransformations: () => void;
+	private readonly screenshot: () => string;
+	private readonly unsubscribePixelTransformations: () => void;
 
 	constructor(options: Options) {
 		autoBind(this);
@@ -57,18 +58,18 @@ private unsubscribePixelTransformations: () => void;
 		this.rootNode.onRender = options.debug
 			? this.onRender
 			: throttle(this.onRender, 32, {
-					leading: true,
-					trailing: true,
-				});
+				leading: true,
+				trailing: true,
+			});
 
 		this.rootNode.onImmediateRender = this.onRender;
 		this.log = logUpdate.create(options.stdout);
 		this.throttledLog = options.debug
 			? this.log
 			: (throttle(this.log, undefined, {
-					leading: true,
-					trailing: true,
-				}) as unknown as LogUpdate);
+				leading: true,
+				trailing: true,
+			}) as unknown as LogUpdate);
 
 		// Ignore last render after unmounting a tree to prevent empty output before exit
 		this.isUnmounted = false;
@@ -89,17 +90,21 @@ private unsubscribePixelTransformations: () => void;
 			false,
 			null,
 			'id',
-			() => {},
-			() => {},
+			() => { },
+			() => { },
 			// @ts-expect-error the types for `react-reconciler` are not up to date with the library.
 			// See https://github.com/facebook/react/blob/c0464aedb16b1c970d717651bba8d1c66c578729/packages/react-reconciler/src/ReactFiberReconciler.js#L236-L259
-			() => {},
-			() => {},
+			() => { },
+			() => { },
 			null,
 		);
 
+		this.screenshot = () => {
+			return this.lastOutput;
+		};
+
 		// Unmount when process exits
-		this.unsubscribeExit = signalExit(this.unmount, {alwaysLast: false});
+		this.unsubscribeExit = signalExit(this.unmount, { alwaysLast: false });
 
 		this.unsubscribePixelTransformations = subscribeToPixelTransformations(() => {
 			this.onRender();
@@ -133,9 +138,9 @@ private unsubscribePixelTransformations: () => void;
 		this.onRender();
 	};
 
-	resolveExitPromise: () => void = () => {};
-	rejectExitPromise: (reason?: Error) => void = () => {};
-	unsubscribeExit: () => void = () => {};
+	resolveExitPromise: () => void = () => { };
+	rejectExitPromise: (reason?: Error) => void = () => { };
+	unsubscribeExit: () => void = () => { };
 
 	calculateLayout = () => {
 		// The 'columns' property can be undefined or 0 when not using a TTY.
@@ -156,7 +161,7 @@ private unsubscribePixelTransformations: () => void;
 			return;
 		}
 
-		const {output, outputHeight, staticOutput} = render(this.rootNode);
+		const { output, outputHeight, staticOutput } = render(this.rootNode);
 
 		// If <Static> output isn't empty, it means new children have been added to it
 		const hasStaticOutput = staticOutput && staticOutput !== '\n';
@@ -219,6 +224,7 @@ private unsubscribePixelTransformations: () => void;
 				writeToStderr={this.writeToStderr}
 				exitOnCtrlC={this.options.exitOnCtrlC}
 				onExit={this.unmount}
+				screenshot={this.screenshot}
 			>
 				{node}
 			</App>

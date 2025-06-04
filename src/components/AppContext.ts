@@ -5,6 +5,10 @@ export type Props = {
 	 * Exit (unmount) the whole Ink app.
 	 */
 	readonly exit: (error?: Error) => void;
+	/**
+	 * Take a screenshot of the current app.
+	 */
+	readonly screenshot: () => string;
 };
 
 /**
@@ -13,6 +17,9 @@ export type Props = {
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const AppContext = createContext<Props>({
 	exit() {},
+	screenshot() {
+		return '';
+	},
 });
 
 AppContext.displayName = 'InternalAppContext';
