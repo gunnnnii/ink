@@ -1,6 +1,7 @@
 export type {RenderOptions, Instance} from './render.js';
 export {default as render} from './render.js';
 export {batchedUpdates} from './reconciler.js';
+export {batchedUpdates as unstable_batchedUpdates} from './reconciler.js';
 export type {Props as BoxProps} from './components/Box.js';
 export {default as Box} from './components/Box.js';
 export type {Props as TextProps} from './components/Text.js';
